@@ -12,6 +12,10 @@ plugins {
     id("com.bmuschko.docker-java-application") version "9.4.0"
 }
 
+dependencies {
+  testImplementation("org.assertj:assertj-core:3.24.2")
+}
+
 val jniSrcDir = file("src/main/jni")
 val jniBuildDir: Directory = layout.buildDirectory.dir("jni").get()
 
@@ -47,6 +51,13 @@ val nativeTargets = listOf(
     "-mtls-dialect=gnu2 $sharedCompilerArgs"
   )
 )
+
+tasks.withType<Test>().configureEach {
+  javaLauncher = javaToolchains.launcherFor() {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+  jvmArgs("-Xcheck:jni")
+}
 
 task("buildJavaIncludesImage", DockerBuildImage::class) {
   dockerFile.set(file("jni-build/java_includes.Dockerfile"))

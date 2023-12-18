@@ -16,8 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package co.elastic.otel;
+package co.elastic.jvmti;
 
-public class JvmtiAccessImpl {
-  public static native String sayHello();
+public interface VirtualThreadMountCallback {
+
+  void threadMounted(Thread thread);
+
+  void threadUnmounted(Thread thread);
 }

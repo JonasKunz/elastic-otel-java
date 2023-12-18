@@ -16,10 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package co.elastic.otel;
+package co.elastic.jvmti;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,9 +42,43 @@ public class JvmtiAccess {
 
   private static volatile State state = State.NOT_LOADED;
 
-  public static String sayHello() {
+  /**
+   * @return null, if mound/unmount events are supported. A string containing the reason if not supported.
+   */
+  public static String checkVirtualThreadMountEventSupport() {
     assertInitialized();
-    return JvmtiAccessImpl.sayHello();
+    return JvmtiAccessImpl.checkVirtualThreadMountEventSupport0();
+  }
+
+  public static synchronized void addVirtualThreadMountCallback(VirtualThreadMountCallback cb) {
+    Set<VirtualThreadMountCallback> newList = Collections.newSetFromMap(new IdentityHashMap<>());
+    newList.addAll(JvmtiAccessImpl.threadMountCallbacks);
+    if (newList.contains(cb)) {
+      throw new IllegalArgumentException("Provided callback has already been added!");
+    }
+    newList.add(cb);
+
+    if (JvmtiAccessImpl.threadMountCallbacks.isEmpty()) {
+      assertInitialized();
+      JvmtiAccessImpl.enableVirtualThreadMountEvents0();
+    }
+    JvmtiAccessImpl.threadMountCallbacks = new ArrayList<>(newList);
+  }
+
+  public static synchronized void removeVirtualThreadMountCallback(VirtualThreadMountCallback cb) {
+    Set<VirtualThreadMountCallback> newList = Collections.newSetFromMap(new IdentityHashMap<>());
+    if (JvmtiAccessImpl.threadMountCallbacks != null) {
+      newList.addAll(JvmtiAccessImpl.threadMountCallbacks);
+    }
+    if (!newList.contains(cb)) {
+      throw new IllegalArgumentException("Provided callback has not been added!");
+    }
+    newList.remove(cb);
+
+    JvmtiAccessImpl.threadMountCallbacks = new ArrayList<>(newList);
+    if (JvmtiAccessImpl.threadMountCallbacks.isEmpty()) {
+      JvmtiAccessImpl.disableVirtualThreadMountEvents0();
+    }
   }
 
   private static void assertInitialized() {
@@ -67,7 +105,6 @@ public class JvmtiAccess {
     return state == State.INITIALIZED;
   }
 
-
   private static synchronized void doInit() {
     switch (state) {
       case NOT_LOADED:
@@ -81,7 +118,7 @@ public class JvmtiAccess {
         }
       case LOADED:
         try {
-          //TODO: call an initialization method and check the results
+          JvmtiAccessImpl.init0();
           state = State.INITIALIZED;
         } catch (Throwable t) {
           logger.log(Level.SEVERE, "Failed to initialize jvmti native library", t);
@@ -95,18 +132,13 @@ public class JvmtiAccess {
     switch (state) {
       case INITIALIZED:
         try {
+          JvmtiAccessImpl.destroy0();
+          JvmtiAccessImpl.threadMountCallbacks = Collections.emptyList();
           state = State.LOADED;
         } catch (Throwable t) {
           logger.log(Level.SEVERE, "Failed to shutdown jvmti native library", t);
           state = State.DESTROY_FAILED;
         }
-    }
-  }
-
-
-  private static void checkError(int returnCode) {
-    if (returnCode < 0) {
-      throw new RuntimeException("Elastic JVMTI Agent returned error code " + returnCode);
     }
   }
 
@@ -136,8 +168,12 @@ public class JvmtiAccess {
 
     String libraryDirectory = System.getProperty("java.io.tmpdir");
     libraryName = "elastic-jvmti-" + libraryName;
-    Path file = ResourceExtractionUtil.extractResourceToDirectory(
-        "elastic-jvmti/" + libraryName + ".so", libraryName, ".so", Paths.get(libraryDirectory));
+    Path file =
+        ResourceExtractionUtil.extractResourceToDirectory(
+            "elastic-jvmti/" + libraryName + ".so",
+            libraryName,
+            ".so",
+            Paths.get(libraryDirectory));
     System.load(file.toString());
   }
 }
