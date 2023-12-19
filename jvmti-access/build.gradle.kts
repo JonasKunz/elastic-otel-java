@@ -25,6 +25,8 @@ jmh {
 dependencies {
   testImplementation(libs.assertj.core)
   testImplementation(libs.awaitility)
+  testImplementation("commons-io:commons-io:2.15.1")
+
   compileOnly(libs.findbugs.jsr305)
 
   jmh("net.bytebuddy:byte-buddy:1.14.6")

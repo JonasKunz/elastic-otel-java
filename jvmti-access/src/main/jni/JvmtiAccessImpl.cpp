@@ -1,13 +1,16 @@
 #include "co_elastic_otel_JvmtiAccessImpl.h"
 #include "ElasticJvmtiAgent.h"
+#include <array>
 
 using elastic::jvmti_agent::ReturnCode;
 using elastic::jvmti_agent::toJint;
 
+JNIEXPORT jint JNICALL Java_co_elastic_otel_JvmtiAccessImpl_init0(JNIEnv* env, jclass) {
+    return toJint(elastic::jvmti_agent::init(env));
+}
 
-JNIEXPORT jint JNICALL Java_co_elastic_otel_JvmtiAccessImpl_destroy0(JNIEnv*, jclass) {
-    elastic::jvmti_agent::destroy();
-    return toJint(ReturnCode::SUCCESS);
+JNIEXPORT jint JNICALL Java_co_elastic_otel_JvmtiAccessImpl_destroy0(JNIEnv* env, jclass) {
+    return toJint(elastic::jvmti_agent::destroy(env));
 }
 
 JNIEXPORT void JNICALL Java_co_elastic_otel_JvmtiAccessImpl_setThreadProfilingCorrelationBuffer0(JNIEnv* env, jclass, jobject bytebuffer) {
@@ -40,5 +43,24 @@ JNIEXPORT jint JNICALL Java_co_elastic_otel_JvmtiAccessImpl_readProfilerReturnCh
 
 JNIEXPORT jint JNICALL Java_co_elastic_otel_JvmtiAccessImpl_sendToProfilerReturnChannelSocket0(JNIEnv* env, jclass, jbyteArray message) {
     return toJint(elastic::jvmti_agent::writeProfilerSocketMessage(env, message));
-
 }
+
+JNIEXPORT jint JNICALL Java_co_elastic_otel_JvmtiAccessImpl_getStackTrace0(JNIEnv * env, jclass, jint skipFrames, jint maxFrames, jlongArray resultBuffer) {
+    jint numFramesCollected;
+    auto resultCode = elastic::jvmti_agent::getStackTrace(env, skipFrames,maxFrames, resultBuffer, numFramesCollected);
+    if(resultCode != elastic::jvmti_agent::ReturnCode::SUCCESS) {
+        return toJint(resultCode);
+    } else {
+        return numFramesCollected;
+    }
+}
+
+
+JNIEXPORT jclass JNICALL Java_co_elastic_otel_JvmtiAccessImpl_getDeclaringClass0(JNIEnv * env, jclass, jlong methodId) {
+    return elastic::jvmti_agent::getDeclaringClass(env, methodId);
+}
+
+JNIEXPORT jstring JNICALL Java_co_elastic_otel_JvmtiAccessImpl_getMethodName0(JNIEnv * env, jclass, jlong methodId, jboolean appendSignature) {
+    return elastic::jvmti_agent::getMethodName(env, methodId, appendSignature);
+}
+

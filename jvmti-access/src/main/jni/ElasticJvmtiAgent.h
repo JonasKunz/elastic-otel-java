@@ -10,13 +10,22 @@ namespace elastic {
         enum class ReturnCode {
             SUCCESS = 0,
             ERROR = -1,
+            ERROR_NOT_INITIALIZED = -2,
         };
 
         constexpr jint toJint(ReturnCode rc) noexcept {
             return static_cast<jint>(rc);
         }
 
-        void destroy();
+        ReturnCode init(JNIEnv* jniEnv);
+        ReturnCode destroy(JNIEnv* jniEnv);
+
+        // when fetching a stacktrace with less or equal this number of frames, no malloc will be performed
+        // instead only stack memory will be used
+        const jint MAX_ALLOCATION_FREE_FRAMES = 32;
+        ReturnCode getStackTrace(JNIEnv* jniEnv, jint skipFrames, jint maxCollectFrames, jlongArray resultBuffer, jint& resultNumFrames);
+        jclass getDeclaringClass(JNIEnv* jniEnv, jlong methodId);
+        jstring getMethodName(JNIEnv* jniEnv, jlong methodId, bool appendSignature);
 
         void setThreadProfilingCorrelationBuffer(JNIEnv* jniEnv, jobject bytebuffer);
         void setProcessProfilingCorrelationBuffer(JNIEnv* jniEnv, jobject bytebuffer);
@@ -36,7 +45,7 @@ namespace elastic {
         typename std::enable_if<
             false == std::is_convertible<T, std::string>::value,
             std::string>::type toStr (T&& val) {
-                return std::to_string(val); 
+                return std::to_string(val);
         }
         inline std::string toStr(std::string const & val) { return val; }
 
@@ -53,13 +62,13 @@ namespace elastic {
         template< class... Args >
         void raiseException(JNIEnv* env, Args&&... messageParts) {
             return raiseExceptionType(env, "java/lang/RuntimeException", messageParts...);
-        }    
+        }
 
         template<typename Ret, class... Args >
         [[nodiscard]] Ret raiseExceptionAndReturn(JNIEnv* env, Ret retVal, Args&&... messageParts) {
             raiseExceptionType(env, "java/lang/RuntimeException", messageParts...);
             return retVal;
-        }  
+        }
     }
 }
 
