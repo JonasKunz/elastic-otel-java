@@ -33,11 +33,19 @@ public class JvmtiAccessImpl {
 
   public static native int destroy0();
 
+
+  public static native int getStackTrace0(int skipFrames, int maxFrames, long[] result);
+
+  public static native Class<?> getDeclaringClass0(long methodId);
+
+  public static native String getMethodName0(long methodId, boolean appendSignature);
+
   public static native String checkVirtualThreadMountEventSupport0();
 
   public static native int enableVirtualThreadMountEvents0();
 
   public static native int disableVirtualThreadMountEvents0();
+
 
   @SuppressWarnings("unused") // called from native code
   static void onThreadMount(Thread thread) {

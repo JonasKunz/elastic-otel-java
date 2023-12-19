@@ -14,6 +14,8 @@ plugins {
 
 dependencies {
   testImplementation("org.assertj:assertj-core:3.24.2")
+  testImplementation("org.awaitility:awaitility:4.2.0")
+  testImplementation("commons-io:commons-io:2.15.1")
 }
 
 val jniSrcDir = file("src/main/jni")

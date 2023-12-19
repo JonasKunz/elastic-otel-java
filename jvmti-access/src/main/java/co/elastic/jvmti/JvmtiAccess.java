@@ -81,6 +81,37 @@ public class JvmtiAccess {
     }
   }
 
+
+  public static int getStackTrace(int skipFrames, int maxFrames, long[] buffer) {
+    if (buffer.length < maxFrames) {
+      throw new IllegalArgumentException("Provided buffer for stacktrace is too small!");
+    }
+    if (skipFrames < 0) {
+      throw new IllegalArgumentException("skipFrames must be positive");
+      //TODO: support negative skipFrames (counting from stack bottom instead of top)
+    }
+    if (maxFrames <= 0) {
+      throw new IllegalArgumentException("maxFrames must be greater than zero");
+    }
+    assertInitialized();
+    //we skip the frame of this method and of the native method, therefore + 2
+    int numFrames = JvmtiAccessImpl.getStackTrace0(skipFrames + 2, maxFrames, buffer);
+    if (numFrames < 0) {
+      throw new RuntimeException("Native code returned error " + numFrames);
+    }
+    return numFrames;
+  }
+
+  public static Class<?> getDeclaringClass(long methodId) {
+    assertInitialized();
+    return JvmtiAccessImpl.getDeclaringClass0(methodId);
+  }
+
+  public static String getMethodName(long methodId, boolean appendSignature) {
+    assertInitialized();
+    return JvmtiAccessImpl.getMethodName0(methodId, appendSignature);
+  }
+
   private static void assertInitialized() {
     switch (state) {
       case NOT_LOADED:

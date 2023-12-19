@@ -27,3 +27,23 @@ JNIEXPORT jint JNICALL Java_co_elastic_jvmti_JvmtiAccessImpl_disableVirtualThrea
     return toJint(elastic::jvmti_agent::setVirtualThreadMountCallbackEnabled(env, false));
 }
 
+
+JNIEXPORT jint JNICALL Java_co_elastic_jvmti_JvmtiAccessImpl_getStackTrace0(JNIEnv * env, jclass, jint skipFrames, jint maxFrames, jlongArray resultBuffer) {
+    jint numFramesCollected;
+    auto resultCode = elastic::jvmti_agent::getStackTrace(env, skipFrames,maxFrames, resultBuffer, numFramesCollected);
+    if(resultCode != elastic::jvmti_agent::ReturnCode::SUCCESS) {
+        return toJint(resultCode);
+    } else {
+        return numFramesCollected;
+    }
+}
+
+
+JNIEXPORT jclass JNICALL Java_co_elastic_jvmti_JvmtiAccessImpl_getDeclaringClass0(JNIEnv * env, jclass, jlong methodId) {
+    return elastic::jvmti_agent::getDeclaringClass(env, methodId);
+}
+
+JNIEXPORT jstring JNICALL Java_co_elastic_jvmti_JvmtiAccessImpl_getMethodName0(JNIEnv * env, jclass, jlong methodId, jboolean appendSignature) {
+    return elastic::jvmti_agent::getMethodName(env, methodId, appendSignature);
+}
+

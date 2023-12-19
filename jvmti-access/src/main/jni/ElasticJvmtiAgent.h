@@ -20,6 +20,13 @@ namespace elastic {
         ReturnCode init(JNIEnv* jniEnv);
         ReturnCode destroy(JNIEnv* jniEnv);
 
+        // when fetching a stacktrace with less or equal this number of frames, no malloc will be performed
+        // instead only stack memory will be used
+        const jint MAX_ALLOCATION_FREE_FRAMES = 32;
+        ReturnCode getStackTrace(JNIEnv* jniEnv, jint skipFrames, jint maxCollectFrames, jlongArray resultBuffer, jint& resultNumFrames);
+        jclass getDeclaringClass(JNIEnv* jniEnv, jlong methodId);
+        jstring getMethodName(JNIEnv* jniEnv, jlong methodId, bool appendSignature);
+
         jstring checkVirtualThreadMountEventSupport(JNIEnv* jniEnv);
         ReturnCode setVirtualThreadMountCallbackEnabled(JNIEnv* jniEnv, jboolean enable);
 
