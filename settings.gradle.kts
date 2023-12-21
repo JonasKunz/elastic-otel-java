@@ -32,3 +32,4 @@ dependencyResolutionManagement {
         }
     }
 }
+include("wait-time-spans")

@@ -12,6 +12,7 @@ subprojects {
 
   apply plugin: "java"
   apply plugin: "com.diffplug.spotless"
+  apply plugin: "maven-publish" //Allows to run ./gradle publishToMavenLocal for easy local testing
 
   ext {
     deps = [
@@ -23,6 +24,7 @@ subprojects {
   }
 
   repositories {
+    mavenLocal()
     mavenCentral()
     maven {
       name = "sonatype"
