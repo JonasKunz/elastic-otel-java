@@ -35,9 +35,9 @@ dependencies {
 }
 
 jmh {
-  fork = 1
-  iterations = 3
-  warmupIterations = 2
+  fork = 3
+  iterations = 5
+  warmupIterations = 5
   //profilers.add("jfr")
 }
 
