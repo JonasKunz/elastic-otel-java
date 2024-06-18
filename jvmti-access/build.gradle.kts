@@ -11,12 +11,23 @@ plugins {
   id("elastic-otel.library-packaging-conventions")
   id("elastic-otel.sign-and-publish-conventions")
   alias(catalog.plugins.dockerJavaApplication)
+  alias(libs.plugins.jmh)
+}
+
+jmh {
+  fork = 1
+  iterations = 3
+  warmupIterations = 1
+
+  //profilers.add("jfr")
 }
 
 dependencies {
   testImplementation(libs.assertj.core)
   testImplementation(libs.awaitility)
   compileOnly(libs.findbugs.jsr305)
+
+  jmh("net.bytebuddy:byte-buddy:1.14.6")
 }
 
 description = "Library for exposing JVMTI and JNI functionality to Java"
