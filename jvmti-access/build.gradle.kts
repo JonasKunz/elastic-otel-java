@@ -4,6 +4,7 @@ import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.command.CreateContainerResponse
 import com.github.dockerjava.api.command.WaitContainerResultCallback
 import com.github.dockerjava.api.model.*
+import me.champeau.jmh.JMHTask
 import java.io.IOException
 import java.util.*
 
@@ -15,11 +16,22 @@ plugins {
 }
 
 jmh {
+  val executor = project.properties.getOrDefault("executor", "PLATFORM")
+  val threadCount = project.properties.getOrDefault("threads", 1)
   fork = 1
-  iterations = 3
-  warmupIterations = 1
+  iterations = 5
+  warmupIterations = 2
+  jvmArgsAppend.add("-Djmh.executor=$executor") //VIRTUAL
+  threads = threadCount.toString().toInt()
+  resultFormat = "CSV"
+  resultsFile = file("${project.rootDir}/jmh-results/benchmark-$threadCount-$executor.csv")
+  //profilers.add("async:libPath=/Users/jonas/async-profiler-3.0-macos/lib/libasyncProfiler.dylib;output=jfr;event=wall")
+}
 
-  //profilers.add("jfr")
+tasks.withType<JMHTask>().configureEach {
+  javaLauncher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
 }
 
 dependencies {
@@ -30,6 +42,9 @@ dependencies {
   compileOnly(libs.findbugs.jsr305)
 
   jmh("net.bytebuddy:byte-buddy:1.14.6")
+  //version 1.36 does not support virtual thread executors
+  jmh("org.openjdk.jmh:jmh-core:1.37")
+  jmh("org.openjdk.jmh:jmh-generator-bytecode:1.37")
 }
 
 description = "Library for exposing JVMTI and JNI functionality to Java"

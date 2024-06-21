@@ -19,10 +19,14 @@ import org.openjdk.jmh.infra.Blackhole;
 @BenchmarkMode(Mode.AverageTime)
 public class StackTraceBenchmark {
 
-  @State(Scope.Benchmark)
+
+  @State(Scope.Thread)
   public static class Consumers {
 
-    @Param({"50"})
+    long[] bigStackTraceBuffer = new long[4096];
+    long[] smallStackTraceBuffer = new long[32];
+
+    @Param({"10", "50", "100", "250", "500"})
     int stackDepth;
     Runnable noop;
     Runnable threadGetStackTrace;
@@ -31,6 +35,10 @@ public class StackTraceBenchmark {
     Runnable stackwalkerFullWithResolve;
     Runnable stackwalkerFullWithoutResolve;
     Runnable stackwalkerTop16WithResolve;
+
+    Runnable jvmtiFullWithResolve;
+    Runnable jvmtiFullWithoutResolve;
+    Runnable jvmtiTop16WithoutResolve;
 
     CallStackInvoker callStack;
 
@@ -58,15 +66,35 @@ public class StackTraceBenchmark {
         return "";
       };
       stackwalkerTop16WithResolve = () -> walker.walk(top16Walker);
+
+      jvmtiFullWithResolve = () -> {
+        int frameCount = JvmtiAccess.getStackTrace(0, bigStackTraceBuffer.length,
+            bigStackTraceBuffer);
+        for (int i = 0; i < frameCount; i++) {
+          blackhole.consume(JvmtiAccess.getDeclaringClass(bigStackTraceBuffer[i]));
+          blackhole.consume(JvmtiAccess.getMethodName(bigStackTraceBuffer[i], false));
+        }
+      };
+
+      jvmtiFullWithoutResolve = () -> {
+        int frameCount = JvmtiAccess.getStackTrace(0, bigStackTraceBuffer.length,
+            bigStackTraceBuffer);
+        blackhole.consume(bigStackTraceBuffer);
+      };
+
+      jvmtiTop16WithoutResolve = () -> {
+        int frameCount = JvmtiAccess.getStackTrace(0, 16, smallStackTraceBuffer);
+        blackhole.consume(bigStackTraceBuffer);
+      };
     }
   }
 
-  //@Benchmark
+  @Benchmark
   public void baseline(Consumers consumers) {
     consumers.callStack.run(consumers.noop);
   }
 
-  //@Benchmark
+  @Benchmark
   public void threadGetStackTrace(Consumers consumers) {
     consumers.callStack.run(consumers.threadGetStackTrace);
   }
@@ -95,4 +123,20 @@ public class StackTraceBenchmark {
   public void stackwalkerTop16WithResolve(Consumers consumers) {
     consumers.callStack.run(consumers.stackwalkerTop16WithResolve);
   }
+
+  @Benchmark
+  public void jvmtiFullWithResolve(Consumers consumers) {
+    consumers.callStack.run(consumers.jvmtiFullWithResolve);
+  }
+
+  @Benchmark
+  public void jvmtiFullWithoutResolve(Consumers consumers) {
+    consumers.callStack.run(consumers.jvmtiFullWithoutResolve);
+  }
+
+  @Benchmark
+  public void jvmtiTop16WithoutResolve(Consumers consumers) {
+    consumers.callStack.run(consumers.jvmtiTop16WithoutResolve);
+  }
+
 }
