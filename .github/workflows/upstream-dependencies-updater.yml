@@ -1,11 +1,17 @@
+---
+
+name: Update Upstream Dependencies
+
 on:
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
-jobs:
+env:
+  GH_TOKEN: ${{ github.token }}
 
+jobs:
   update-upstream-dependencies:
     runs-on: ubuntu-latest
     steps:
