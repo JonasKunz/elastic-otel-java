@@ -15,3 +15,5 @@ out/
 
 # OS X
 **/.DS_Store
+
+create-update-branch.sh
