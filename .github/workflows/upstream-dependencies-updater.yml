@@ -10,6 +10,8 @@ permissions:
 
 env:
   GH_TOKEN: ${{ github.token }}
+  # this branch will be created / force-pushed for the PRs to update the upstream dependencies
+  BRANCH_NAME: update-upstream-agent
 
 jobs:
   update-upstream-dependencies:
@@ -36,7 +38,17 @@ jobs:
           fi
           git status
       - name: Gradle build without tests to regenerate license files
-        uses: ./.github/workflows/gradle-goal
         if: ${{ steps.dependencyUpdate.outputs.updated == 'yes' }}
+        uses: ./.github/workflows/gradle-goal
         with:
           command: "./gradlew build -x test"
+      - name: Push branch for version update
+        if: ${{ steps.dependencyUpdate.outputs.updated == 'yes' }}
+        run: |
+          git checkout -b $BRANCH_NAME
+          git add .
+          git commit -m "Update upstream dependencies for upstream release ${{ steps.latestOtelRelease.outputs.tag }}"
+          git push --force
+          
+        
+        
