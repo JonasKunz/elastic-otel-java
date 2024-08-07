@@ -1,0 +1,18 @@
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+
+  update-upstream-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch latest opentelemetry-java-instrumentation release
+        run: |
+          tag_name="$(gh release list --repo https://github.com/open-telemetry/opentelemetry-java-instrumentation --json isLatest,tagName --jq '.[] | select(.isLatest) | .tagName')"
+          echo "Tag of the latest opentelemetry-java-instrumentation release is $tag_name"
+          echo "tag=$tag_name" >> $GITHUB_OUTPUT
