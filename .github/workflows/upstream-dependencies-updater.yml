@@ -53,7 +53,7 @@ jobs:
           git checkout -b $BRANCH_NAME
           git add .
           git commit -m "Update upstream dependencies for upstream release ${{ steps.latestOtelRelease.outputs.tag }}"
-          git push --force
+          git push --set-upstream origin --force
           
         
         
