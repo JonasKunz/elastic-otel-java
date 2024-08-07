@@ -24,7 +24,7 @@ jobs:
           echo "tag=$tag_name" >> $GITHUB_OUTPUT
       - name: Update upstream dependencies
         run: |
-          ./gradle/update-upstream.sh
+          (cd ./gradle; ./update-upstream.sh)
           if [[ `git status --porcelain` ]]; then
             echo "updated=1" >> "$GITHUB_OUTPUT"
           else
