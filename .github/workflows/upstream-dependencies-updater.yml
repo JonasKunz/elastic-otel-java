@@ -16,9 +16,14 @@ env:
 jobs:
   update-upstream-dependencies:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: elastic/oblt-actions/git/setup@v1
+        with:
+          github-token: ${{ env.GH_TOKEN }}
       - name: Fetch latest opentelemetry-java-instrumentation release
         id: latestOtelRelease
         run: |
